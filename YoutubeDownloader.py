@@ -1,20 +1,13 @@
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
+import time
 from pytube import YouTube ##pip install pytube
 
 
+FileSize = 0
 Folder_Name = ""
 
-#To update the progessbar while downloading video
-def show_progress_bar(chunk,file_handler, bytes_remaining):
-    print(bytes_remaining)
-    global FileSize
-    FileDownloaded = FileSize - bytes_remaining
-    print(FileDownloaded)
-    percent = (FileDownloaded/FileSize)*100
-    print(percent)
-    ProgressBar['value'] = int(percent)
 
 #To set the folder for saving the downloaded video
 def openLocation():
@@ -36,33 +29,53 @@ def downloadVideo():
     if(len(url)>1):#To check if the link is valid
         yt = YouTube(url,on_progress_callback=show_progress_bar)
         if(Choice == Choices[0]):
-            select = yt.streams.filter(progressive=True).first()
-
+            select = yt.streams.filter(res="1080p").first()
+        
         elif(Choice ==Choices[1]):
-            select = yt.streams.filter(progressive=True,file_extension='mp4').last()
+            select = yt.streams.filter(res="720p").first()
 
+        elif(Choice ==Choices[2]):
+            select = yt.streams.filter(res="480p").first()
+            
         elif(Choice == Choices[3]):
-            LinkErrormsg.config(text="Please Select the qulity!!",fg="red")
+            LinkErrormsg.config(text="Paste Link Again!!",fg="red")
 
-        elif(Choice == None):
-            LinkErrormsg.config(text="Please Select the qulity!!",fg="red")
-
+        else:
+            LinkErrormsg.config(text="Please Slect the qulity!!",fg="red")
         FileSize = select.filesize
         select.download(Folder_Name)
         LinkErrormsg.config(text="Download Completed!!",fg="green")
     else:
         LinkErrormsg.config(text="Please Paste the proper link again")
     
+
 #To download the audio file only
 def downloadAudio():
+    global FileSize
     url =LinkBox.get()
 
     if(len(url)>1):
-        LinkErrormsg.config(text="")
-        yt =YouTube(url)
+        yt =YouTube(url,on_progress_callback=show_progress_bar)
         select = yt.streams.filter(only_audio=True).first()
+    else:
+         LinkErrormsg.config(text="Paste your link properly!!",fg="green")
+    FileSize = select.filesize
     select.download(Folder_Name)
     LinkErrormsg.config(text="Download Completed!!")
+
+
+#To update the progessbar while downloading video
+def show_progress_bar(chunk,file_handler, bytes_remaining):
+    #print(bytes_remaining)
+    global FileSize
+    FileDownloaded = FileSize - bytes_remaining
+    #print(FileDownloaded)
+    percent = (FileDownloaded/FileSize)*100
+    #print(percent)
+    ProgressVar.set(percent)
+    time.sleep(0.02)
+    root.update_idletasks()
+
 
 
 #initialization
@@ -77,7 +90,7 @@ headerIcon.place(x=100,y=0)
 
 root.config(bg="lightgreen")
 
-#Layout design
+#UI design
 TextLabel = Label(root,text="Youtube Video and Audio Downloader", font=("Maiandra GD",16,"bold"),bg="lightgreen")
 TextLabel.place(x=200,y=20)
 
@@ -103,20 +116,22 @@ PathErrormsg.place(x=300, y=240)
 ChoiceLabel = Label(root,text="Select the Quality of the video : ", font=("Comic Sans MS",15),bg="lightgreen")
 ChoiceLabel.place(x=100,y=300)
 
-Choices = ["1080p","144p",]
+Choices = ["1080p","720p","480p"]
 ChoiceMenu = ttk.Combobox(root, values = Choices)
 ChoiceMenu.place(x=450,y=305,)
 
 QualityErrormsg = Label(root, text = "",fg="red",font=("Comic Sans MS",12),bg="lightgreen")
 QualityErrormsg.place(x=280, y=360)
 
-ProgressBar = ttk.Progressbar(root,orient=HORIZONTAL,length=500,mode='determinate') #Label(root,text="progress",fg="red",font=("Comic Sans MS",12),bg="lightgreen")
+ProgressVar = DoubleVar()
+ProgressBar = ttk.Progressbar(root,orient=HORIZONTAL,variable=ProgressVar,length=500,mode='determinate') #Label(root,text="progress",fg="red",font=("Comic Sans MS",12),bg="lightgreen")
 ProgressBar.place(x=150,y=390)
 
 VideoButton = Button(root, width =20, bg="red",fg="white",text="Download Video",font=("Arial Rounded MT Bold",12,"bold"),command=downloadVideo)
-VideoButton.place(x=80,y=430)
+VideoButton.place(x=80,y=450)
 
 AudioButton = Button(root, width =20, bg="red",fg="white",text="Download Audio",font=("Arial Rounded MT Bold",12,"bold"),command=downloadAudio)
-AudioButton.place(x=500,y=430)
+AudioButton.place(x=500,y=450)
 
 root.mainloop()
+
