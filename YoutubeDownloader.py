@@ -6,6 +6,16 @@ from pytube import YouTube ##pip install pytube
 
 Folder_Name = ""
 
+#To update the progessbar while downloading video
+def show_progress_bar(chunk,file_handler, bytes_remaining):
+    print(bytes_remaining)
+    global FileSize
+    FileDownloaded = FileSize - bytes_remaining
+    print(FileDownloaded)
+    percent = (FileDownloaded/FileSize)*100
+    print(percent)
+    ProgressBar['value'] = int(percent)
+
 #To set the folder for saving the downloaded video
 def openLocation():
     global Folder_Name
@@ -24,7 +34,7 @@ def downloadVideo():
     url = LinkBox.get()
 
     if(len(url)>1):#To check if the link is valid
-        yt = YouTube(url)
+        yt = YouTube(url,on_progress_callback=show_progress_bar)
         if(Choice == Choices[0]):
             select = yt.streams.filter(progressive=True).first()
 
@@ -37,6 +47,7 @@ def downloadVideo():
         elif(Choice == None):
             LinkErrormsg.config(text="Please Select the qulity!!",fg="red")
 
+        FileSize = select.filesize
         select.download(Folder_Name)
         LinkErrormsg.config(text="Download Completed!!",fg="green")
     else:
@@ -98,6 +109,9 @@ ChoiceMenu.place(x=450,y=305,)
 
 QualityErrormsg = Label(root, text = "",fg="red",font=("Comic Sans MS",12),bg="lightgreen")
 QualityErrormsg.place(x=280, y=360)
+
+ProgressBar = ttk.Progressbar(root,orient=HORIZONTAL,length=500,mode='determinate') #Label(root,text="progress",fg="red",font=("Comic Sans MS",12),bg="lightgreen")
+ProgressBar.place(x=150,y=390)
 
 VideoButton = Button(root, width =20, bg="red",fg="white",text="Download Video",font=("Arial Rounded MT Bold",12,"bold"),command=downloadVideo)
 VideoButton.place(x=80,y=430)
